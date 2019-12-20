@@ -1,0 +1,14 @@
+# /etc/systemd/system/grinnodes.service
+[Unit]
+Description=GrinNodes Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/www/
+ExecStart=/root/www/grinnodes > /root/www/grinnodes.log
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

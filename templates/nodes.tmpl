@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+{{template "head"}}
+<body>
+
+{{template "header"}}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <table class="table table-striped">
+                <thead class="thead-light">
+                <tr>
+                    <th scope="col">Address</th>
+                    <th scope="col">User Agent</th>
+                    <th scope="col">Height</th>
+                    <th scope="col">Last Seen</th>
+                    <th scope="col" width="20%">Location</th>
+                    <th scope="col" width="20%">NetWork</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range .peers}}
+                <tr>
+                    <td>{{.Address}} {{if .IsPublic}}<span class="badge badge-success">public</span>{{end}}</br></td>
+                    <td>{{.UserAgent}}</td>
+                    <td>{{if gt .Height 0}}{{.Height}}{{end}}</td>
+                    <td>{{.LastSeen}}</td>
+                    <td>{{.Country}}</br>{{.City}}</td>
+                    <td>{{.NetWork}}</td>
+                </tr>
+                {{end}}
+                </tbody>
+            </table>
+        
+            <ul class="pagination justify-content-center">
+                {{range .pageLink}}
+                    {{if eq . 0}}
+                    <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                    {{else if eq . $.page}}
+                    <li class="page-item active"><a class="page-link" href="?page={{.}}">{{.}}</a></li>
+                    {{else}}
+                    <li class="page-item"><a class="page-link" href="?page={{.}}">{{.}}</a></li>
+                    {{end}}
+                {{end}}
+            </ul>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

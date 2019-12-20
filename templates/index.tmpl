@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+{{template "head"}}
+<body>
+
+{{template "header"}}
+
+<div class="container">
+    <div class="row">
+
+        <div class="col-1">
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header text-center">
+                    Total Nodes
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title text-center"><a href="/nodes">{{.total}}</a></h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4 col-lg-3">
+            <div class="card">
+                <div class="card-header text-center">
+                    Public Reachable
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title text-center">{{.public}}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header text-center">
+                    Height
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title text-center">{{.height}}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+&nbsp;
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 order-lg-first">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Countries</th>
+                    <th scope="col" width="50%"></th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range .country}}
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td>{{.Total}}&nbsp;({{.Percent}}%)</td>
+                </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-lg-9 order-sm-first">
+            <div id="map" style="height: 600px"></div>
+        </div>
+    </div>
+</div>
+
+
+<script src='https://api.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.css' rel='stylesheet' />
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v0.10.1/mapbox-gl-language.js'></script>
+<script>
+    mapboxgl.accessToken = '{{.mapboxkey}}';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        zoom: 0.9,
+        center: [10, 20],
+        style: 'mapbox://styles/mapbox/streets-v10'
+    });
+
+    map.setMaxZoom(12);
+
+    map.addControl(new mapboxgl.FullscreenControl());
+
+    var language = new MapboxLanguage();
+    map.addControl(language);
+
+    map.on('load', function() {
+        map.addSource('nodes', {
+            "type": "geojson",
+            "data": "./geojson"
+        });
+
+        map.addLayer({
+            "id": "nodes-heat",
+            "type": "heatmap",
+            "source": "nodes",
+            "maxzoom": 13,
+            "paint": {
+                "heatmap-radius": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    0, 3,
+                    12, 20
+                ],
+                "heatmap-opacity": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    3, 0.99,
+                    12, 1
+                ],
+            }
+        });
+    });
+
+</script>
+
+</body>
+</html>

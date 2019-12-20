@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+{{template "head"}}
+<body>
+
+{{template "header"}}
+
+<div class="container">
+    <div class="row">
+
+        <div class="col-12">
+            <div id="chart" style="height: 600px"></div>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+
+<script>
+var options = {
+    chart: {
+		zoomType: 'x'
+	},
+    title : {
+        text: "grin node count history"
+    },
+    legend: {
+        enabled: true
+    },
+    xAxis : {
+        type : "datetime",
+        dateTimeLabelFormats: {
+            millisecond: '%H:%M:%S.%L',
+            second: '%H:%M:%S',
+            minute: '%H:%M',
+            hour: '%H:%M',
+            day: '%m-%d',
+            week: '%m-%d',
+            month: '%Y-%m',
+            year: '%Y'
+        }
+    },
+    yAxis: {
+        title: {
+            text: 'count'
+        }
+    },
+    tooltip: {
+        dateTimeLabelFormats: {
+            millisecond: '%H:%M:%S.%L',
+            second: '%Y-%m-%d %H:%M:%S',
+            minute: '%Y-%m-%d %H:%M:%S',
+            hour: '%Y-%m-%d %H:%M:%S',
+            day: '%Y-%m-%d %H:%M:%S',
+            week: '%m-%d',
+            month: '%Y-%m',
+            year: '%Y'
+        }
+    },
+    series : [{
+        type : "line",
+        "name" : "Total Nodes",
+        data : [
+            {{range .total}}
+                [{{.UnixTime}}, {{.Total}}],
+            {{end}}
+        ]
+    }, 
+    {
+        type : "line",
+        "name" : "Public Reachable",
+        data : [
+            {{range .total}}
+                [{{.UnixTime}}, {{.PublicTotal}}],
+            {{end}}
+        ]
+    }]
+}
+Highcharts.chart('chart', options);
+</script>
+
+
+</body>
+</html>
