@@ -2,44 +2,61 @@ package p2p
 
 import (
 	"encoding/binary"
+	"fmt"
+	"math/rand"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/xbbdjj/grinnodes/client"
 	"github.com/xbbdjj/grinnodes/log"
 	"github.com/xbbdjj/grinnodes/p2p/message"
 	"github.com/xbbdjj/grinnodes/storage"
 	"go.uber.org/zap"
-	"math/rand"
-	"net"
-	"sync"
-	"time"
 )
 
-var connected sync.Map
+type node struct {
+	addr     net.TCPAddr
+	lastSeen int64
+}
 
-//Start ... every peer start one goroutine
+var peerAll sync.Map
+var peerConnected sync.Map
+
+//Start ... start peer connect
 func Start() {
-	for {
-		peers, err := storage.PeersToConnect()
-		if err != nil {
-			log.Logger.Error("p2p get ip", zap.Error(err))
-			return
+	res, err := storage.P2PToConnect()
+	if err == nil {
+		for _, p := range res {
+			n := node{addr: p, lastSeen: time.Now().Unix()}
+			peerAll.Store(fmt.Sprintf("%s:%d", n.addr.IP, n.addr.Port), n)
 		}
+	}
 
-		for _, p := range peers {
+	for {
+		peerAll.Range(func(key, value interface{}) bool {
 			time.Sleep(time.Second)
-			go work(p)
-		}
-		time.Sleep(time.Minute)
+			n, ok := value.(node)
+			if ok {
+				if n.lastSeen < time.Now().Unix()-86400 {
+					peerAll.Delete(fmt.Sprintf("%s:%d", n.addr.IP, n.addr.Port))
+				} else {
+					go work(n.addr)
+				}
+			}
+			return true
+		})
 	}
 }
 
 //one goroutine to handle one p2p conenct
 func work(addr net.TCPAddr) {
-	_, ok := connected.LoadOrStore(addr.IP.String(), time.Now().Unix)
+	_, ok := peerConnected.LoadOrStore(addr.IP.String(), time.Now().Unix)
 	if ok {
 		return
 	}
 	defer func() {
-		connected.Delete(addr.IP.String())
+		peerConnected.Delete(addr.IP.String())
 	}()
 
 	conn, err := net.DialTCP("tcp", nil, &addr)
@@ -50,10 +67,11 @@ func work(addr net.TCPAddr) {
 		//"no route to host"
 		//"network is unreachable"
 		//"can't assign requested address"
-		storage.P2PFailed(addr)
 		return
 	}
 	defer conn.Close()
+
+	storage.P2PConnected(addr)
 
 	log.Logger.Info("p2p connected", zap.String("ip", addr.IP.String()))
 
@@ -70,7 +88,7 @@ func work(addr net.TCPAddr) {
 
 	_, err = conn.Write(msg.Bytes())
 	if err != nil {
-		log.Logger.Error("p2p write hand message", zap.String("ip", addr.IP.String()))
+		log.Logger.Error("p2p write hand message", zap.String("ip", addr.IP.String()), zap.Error(err))
 		return
 	}
 
@@ -93,7 +111,7 @@ func work(addr net.TCPAddr) {
 
 			_, err = conn.Write(m.Bytes())
 			if err != nil {
-				log.Logger.Error("p2p write pong message", zap.String("ip", addr.IP.String()), zap.Error(err))
+				log.Logger.Error("p2p write ping message", zap.String("ip", addr.IP.String()), zap.Error(err))
 				return
 			}
 		case _ = <-tPeer.C:
@@ -151,10 +169,7 @@ func work(addr net.TCPAddr) {
 				return
 			}
 
-			err = storage.P2PConnected(addr)
-			if err != nil {
-				log.Logger.Error("p2p storage connected", zap.String("ip", addr.IP.String()), zap.Error(err))
-			}
+			storage.P2PConnecting(addr)
 
 			if msg == 2 {
 				shake, err := message.NewShake(b)
@@ -164,10 +179,7 @@ func work(addr net.TCPAddr) {
 					log.Logger.Error("p2p decode shake", zap.String("ip", addr.IP.String()), zap.Error(err))
 				} else {
 					log.Logger.Debug("p2p receive shake", zap.String("ip", addr.IP.String()))
-					err := storage.ReceiveShake(addr, shake)
-					if err != nil {
-						log.Logger.Error("p2p storage shake", zap.String("ip", addr.IP.String()), zap.Error(err))
-					}
+					storage.ReceiveShake(addr, shake)
 				}
 			} else if msg == 4 {
 				pong, err := message.NewPong(b)
@@ -177,22 +189,23 @@ func work(addr net.TCPAddr) {
 					log.Logger.Error("p2p decode pong", zap.String("ip", addr.IP.String()), zap.Error(err))
 				} else {
 					log.Logger.Debug("p2p receive pong", zap.String("ip", addr.IP.String()))
-					err := storage.ReceivePong(addr, pong)
-					if err != nil {
-						log.Logger.Error("p2p storage pong", zap.String("ip", addr.IP.String()), zap.Error(err))
-					}
+					storage.ReceivePong(addr, pong)
 				}
 			} else if msg == 6 {
-				p, err := message.NewPeers(b)
+				peers, err := message.NewPeers(b)
 				// fmt.Printf("%#v\n", p)
 
 				if err != nil {
 					log.Logger.Error("p2p decode peers", zap.String("ip", addr.IP.String()), zap.Error(err))
 				} else {
 					log.Logger.Debug("p2p receive peers", zap.String("ip", addr.IP.String()))
-					err := storage.ReceivePeers(p)
-					if err != nil {
-						log.Logger.Error("p2p storage peers", zap.String("ip", addr.IP.String()), zap.Error(err))
+
+					for _, p := range peers {
+						if storage.IsPublicIP(p.IP) && p.Port > 0 {
+							n := node{addr: p, lastSeen: time.Now().Unix()}
+							peerAll.Store(fmt.Sprintf("%s:%d", p.IP, p.Port), n)
+							storage.AddPeer(p)
+						}
 					}
 				}
 			} else if msg == 8 {
@@ -203,10 +216,7 @@ func work(addr net.TCPAddr) {
 					log.Logger.Error("p2p decode header", zap.String("ip", addr.IP.String()), zap.Error(err))
 				} else {
 					log.Logger.Debug("p2p receive header", zap.String("ip", addr.IP.String()))
-					err := storage.ReceiveHeader(addr, header)
-					if err != nil {
-						log.Logger.Error("p2p storage header", zap.String("ip", addr.IP.String()), zap.Error(err))
-					}
+					storage.ReceiveHeader(addr, header)
 				}
 			}
 		}
