@@ -169,7 +169,7 @@ func PublicNodeList(ip string) ([]PublicNode, error) {
 		}
 		lastseen := p2pLastConnected
 		if p2pLastSeen > p2pLastConnected {
-			lastseen = p2pLastConnected
+			lastseen = p2pLastSeen
 		}
 		n.LastSeen = time.Unix(int64(lastseen), 0).In(time.UTC).Format("2006-01-02 03:04")
 
