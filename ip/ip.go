@@ -106,7 +106,7 @@ func Start() {
 			}
 			for _, ip := range peers {
 
-				key := config.Conf.IPDataKey
+				key := config.NewConfig().IPDataKey
 				url := fmt.Sprintf("https://api.ipdata.co/%s?api-key=%s", ip, key)
 				resp, err := http.Get(url)
 				if err != nil {
