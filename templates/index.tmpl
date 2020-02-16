@@ -8,7 +8,7 @@
 <div class="container">
     <div class="row">
 
-        <div class="col-1">
+        <div class="col-2">
         </div>
 
         <div class="col-md-3">
@@ -17,33 +17,24 @@
                     Total Nodes
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title text-center"><a href="/nodes">{{.total}}</a></h3>
+                    <h3 class="card-title text-center">{{.total}}</h3>
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-4 col-lg-3">
-            <div class="card">
-                <div class="card-header text-center">
-                    Public Reachable
-                </div>
-                <div class="card-body">
-                    <h3 class="card-title text-center">{{.public}}</h3>
-                </div>
-            </div>
+        <div class="col-1">
         </div>
 
         <div class="col-md-3">
             <div class="card">
                 <div class="card-header text-center">
-                    Height
+                    Public Reachable
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title text-center">{{.height}}</h3>
+                    <h3 class="card-title text-center"><a href="/publicnodes">{{.public}}</a></h3>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 

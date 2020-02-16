@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/xbbdjj/grinnodes/config"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -47,4 +48,13 @@ func GetChart() ([]chart, error) {
 		return arr, err
 	}
 	return arr, nil
+}
+
+func ClearOldPeer() {
+	ts := time.Now().Unix() - config.NewConfig().PeerClearDuration
+	db.Exec(
+		"DELETE FROM peer WHERE p2p_last_connected < ? AND p2p_last_seen < ? ",
+		ts,
+		ts,
+	)
 }

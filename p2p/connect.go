@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xbbdjj/grinnodes/client"
 	"github.com/xbbdjj/grinnodes/log"
 	"github.com/xbbdjj/grinnodes/p2p/message"
 	"github.com/xbbdjj/grinnodes/storage"
@@ -77,11 +76,11 @@ func work(addr net.TCPAddr) {
 
 	msg := message.NewMainnetMessage(message.MsgTypeHand)
 	hand := message.Hand{
-		Version:         client.Status.Version,
+		Version:         3,
 		Capabilities:    15,
 		Nonce:           uint64(time.Now().Unix()),
-		TotalDifficulty: client.Status.TotalDifficulty,
-		UserAgent:       client.Status.UserAgent,
+		TotalDifficulty: 0,
+		UserAgent:       "",
 		Genesis:         "40adad0aec27797b48840aa9e00472015c21baea118ce7a2ff1a82c0f8f5bf82",
 	}
 	msg.Payload = hand.Payload()
@@ -103,8 +102,8 @@ func work(addr net.TCPAddr) {
 		select {
 		case _ = <-tPing.C:
 			ping := message.Ping{
-				TotalDifficulty: client.Status.TotalDifficulty,
-				Height:          client.Status.Height,
+				TotalDifficulty: 0,
+				Height:          0,
 			}
 			m := message.NewMainnetMessage(message.MsgTypePing)
 			m.Payload = ping.Playload()

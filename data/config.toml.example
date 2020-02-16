@@ -2,4 +2,4 @@ googlemap_key = ""
 mapbox_key = "pk.eyJ1IjoiZ3Jpbm5vZGVzIiwiYSI6ImNrM2hodmx6MjA5eXgza3BodzF5a3hsaGgifQ.-Z-ydHRQkB59peRnwDdbCA"
 ipdata_key = ""
 peer_active_duration = 7200
-client_http_addr = "127.0.0.1:3413"
+peer_clear_duration = 604800

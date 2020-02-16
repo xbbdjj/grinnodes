@@ -15,4 +15,5 @@ Use <https://www.mapbox.com> to display the node on the map.
     * mapbox_key:  token of mapbox
     * ipdata_key:  token of https://api.ipdata.co 
     * peer_active_duration: how long time from last seen in network the node is active in the seconds
-    * client_http_addr: the Grin Node (<https://github.com/mimblewimble/grin>) API address
+    * peer_clear_duration: how long time from last seen in network the node will delete
+    

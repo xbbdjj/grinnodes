@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/spf13/viper"
 )
 
@@ -11,12 +9,10 @@ type config struct {
 	MapBoxKey          string
 	IPDataKey          string
 	PeerActiveDuration int64
-	ClientHttpAddr     string
+	PeerClearDuration  int64
 }
 
-var Conf config
-
-func init() {
+func NewConfig() config {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./data/")
 	viper.SetConfigType("toml")
@@ -25,16 +21,16 @@ func init() {
 	viper.SetDefault("mapbox_key", "")
 	viper.SetDefault("ipdata_key", "")
 	viper.SetDefault("peer_active_duration", 3600)
-	viper.SetDefault("client_http_addr", "45.77.206.185:3413")
+	viper.SetDefault("peer_clear_duration", 86400)
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Println(err)
-	}
+	viper.ReadInConfig()
 
-	Conf.GoogleMapKey = viper.GetString("googlemap_key")
-	Conf.MapBoxKey = viper.GetString("mapbox_key")
-	Conf.IPDataKey = viper.GetString("ipdata_key")
-	Conf.PeerActiveDuration = viper.GetInt64("peer_active_duration")
-	Conf.ClientHttpAddr = viper.GetString("client_http_addr")
+	var conf config
+	conf.GoogleMapKey = viper.GetString("googlemap_key")
+	conf.MapBoxKey = viper.GetString("mapbox_key")
+	conf.IPDataKey = viper.GetString("ipdata_key")
+	conf.PeerActiveDuration = viper.GetInt64("peer_active_duration")
+	conf.PeerClearDuration = viper.GetInt64("peer_clear_duration")
+
+	return conf
 }

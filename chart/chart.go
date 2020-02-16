@@ -16,6 +16,7 @@ func Start() {
 	for {
 		select {
 		case _ = <-ticker.C:
+			storage.ClearOldPeer()
 			total, err := storage.NodeTotal()
 			if err != nil {
 				continue
